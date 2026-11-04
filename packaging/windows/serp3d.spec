@@ -4,7 +4,7 @@
 import importlib.util
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_dynamic_libs
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 
 # OCP.pyd links against the VTK runtime shipped in the vtkmodules wheel;
 # nothing imports vtk from Python, so collect the DLLs explicitly.
@@ -24,7 +24,8 @@ a = Analysis(
     ["serp3d_entry.py"],
     pathex=[],
     binaries=vtk_bins + e57_bins,
-    datas=[],
+    # Interface-language catalogues are plain data files PyInstaller cannot see.
+    datas=collect_data_files("serpentine3d", includes=["locales/*.json"]),
     hiddenimports=[],
     # A hook here replaces contrib's hook of the same name: hook-OpenGL.py
     # leaves out the DLLs PyOpenGL never loads on this Python.

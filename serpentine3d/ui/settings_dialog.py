@@ -25,6 +25,8 @@ from ..utils.config import (
     DEFAULT_SHORTCUTS, parse_chord, parse_rhino_aliases, parse_shortcuts,
 )
 from .. import launcher
+from ..i18n import (available_languages, current_language, language_name,
+                    tr)
 from . import theme
 from .dialogs import untether
 
@@ -87,9 +89,9 @@ def _page(title: str, subtitle: str) -> tuple[QWidget, QVBoxLayout]:
     layout = QVBoxLayout(w)
     layout.setContentsMargins(18, 14, 18, 14)
     layout.setSpacing(10)
-    t = QLabel(title)
+    t = QLabel(tr(title))
     t.setStyleSheet("font-size: 16px; font-weight: bold; color: #e8e9ea;")
-    s = QLabel(subtitle)
+    s = QLabel(tr(subtitle))
     s.setWordWrap(True)
     s.setStyleSheet("color: #85868a;")
     layout.addWidget(t)
@@ -104,9 +106,9 @@ def _section(title: str, subtitle: str) -> QWidget:
     layout = QVBoxLayout(w)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(2)
-    t = QLabel(title)
+    t = QLabel(tr(title))
     t.setStyleSheet("font-weight: bold; color: #e8e9ea;")
-    s = QLabel(subtitle)
+    s = QLabel(tr(subtitle))
     s.setWordWrap(True)
     s.setStyleSheet("color: #85868a; font-size: 11px;")
     layout.addWidget(t)
@@ -119,7 +121,7 @@ class SettingsDialog(QDialog):
         super().__init__(window)
         self.window = window
         self.cfg = window.cfg
-        self.setWindowTitle("Serpentine3D Settings")
+        self.setWindowTitle(tr("Serpentine3D Settings"))
         self.resize(760, 620)
         untether(self, over=window)   # a panel you read beside the drawing
 
@@ -135,19 +137,19 @@ class SettingsDialog(QDialog):
             ("Assistant", self._assistant_page),
             ("Updates", self._updates_page),
         ]:
-            self.sidebar.addItem(name)
+            self.sidebar.addItem(tr(name))
             self.pages.addWidget(builder())
         self.sidebar.currentRowChanged.connect(self.pages.setCurrentIndex)
         self.sidebar.setCurrentRow(0)
 
-        btn_defaults = QPushButton("Restore Defaults")
+        btn_defaults = QPushButton(tr("Restore Defaults"))
         btn_defaults.clicked.connect(self._restore_defaults)
-        btn_close = QPushButton("Close")
+        btn_close = QPushButton(tr("Close"))
         btn_close.setDefault(True)
         btn_close.clicked.connect(self.accept)
         # while a new interface scale waits, the footer says so beside
         # Close, which is where people look before pressing it
-        self.btn_restart_now = QPushButton("Restart now")
+        self.btn_restart_now = QPushButton(tr("Restart now"))
         self.btn_restart_now.clicked.connect(self._restart_now)
         footer = QHBoxLayout()
         footer.addWidget(btn_defaults)
@@ -184,7 +186,7 @@ class SettingsDialog(QDialog):
         layout.addWidget(self.rb_middle)
         layout.addWidget(self.rb_right)
 
-        self.cb_invert = QCheckBox("Invert scroll-wheel zoom direction")
+        self.cb_invert = QCheckBox(tr("Invert scroll-wheel zoom direction"))
         self.cb_invert.setChecked(
             bool(self.cfg.get("mouse", "invert_scroll", default=False)))
         self.cb_invert.toggled.connect(self._mouse_changed)
@@ -211,15 +213,15 @@ class SettingsDialog(QDialog):
         self.sl_zoom = slider_row("Zoom speed", "zoom_speed")
 
         layout.addSpacing(12)
-        layout.addWidget(QLabel("<b>SpaceMouse (3Dconnexion)</b>"))
-        self.cb_sm_enabled = QCheckBox("Enable SpaceMouse navigation")
+        layout.addWidget(QLabel(tr("<b>SpaceMouse (3Dconnexion)</b>")))
+        self.cb_sm_enabled = QCheckBox(tr("Enable SpaceMouse navigation"))
         self.cb_sm_enabled.setChecked(
             bool(self.cfg.get("spacemouse", "enabled", default=True)))
         self.cb_sm_enabled.toggled.connect(self._mouse_changed)
         layout.addWidget(self.cb_sm_enabled)
 
         row = QHBoxLayout()
-        row.addWidget(QLabel("Sensitivity"))
+        row.addWidget(QLabel(tr("Sensitivity")))
         self.sl_sm = QSlider(Qt.Orientation.Horizontal)
         self.sl_sm.setRange(20, 300)
         self.sl_sm.setValue(int(float(self.cfg.get(
@@ -233,9 +235,9 @@ class SettingsDialog(QDialog):
         row.addWidget(sm_val)
         layout.addLayout(row)
 
-        self.cb_sm_pan = QCheckBox("Invert pan (slide/lift)")
-        self.cb_sm_zoom = QCheckBox("Invert zoom (push/pull)")
-        self.cb_sm_orbit = QCheckBox("Invert orbit (tilt/twist)")
+        self.cb_sm_pan = QCheckBox(tr("Invert pan (slide/lift)"))
+        self.cb_sm_zoom = QCheckBox(tr("Invert zoom (push/pull)"))
+        self.cb_sm_orbit = QCheckBox(tr("Invert orbit (tilt/twist)"))
         for cb, key in ((self.cb_sm_pan, "invert_pan"),
                         (self.cb_sm_zoom, "invert_zoom"),
                         (self.cb_sm_orbit, "invert_orbit")):
@@ -287,7 +289,7 @@ class SettingsDialog(QDialog):
         keyboard_buttons = self._table_buttons(
             self.key_table, self._import_shortcuts,
             on_change=self._shortcuts_changed)
-        restore = QPushButton("Restore keyboard defaults")
+        restore = QPushButton(tr("Restore keyboard defaults"))
         restore.clicked.connect(self._restore_keyboard_defaults)
         keyboard_buttons.addWidget(restore)
         layout.addLayout(keyboard_buttons)
@@ -463,7 +465,7 @@ class SettingsDialog(QDialog):
                           "while picking. Also available on the osnap bar "
                           "under the command line.")
         vp = self.window.viewport
-        self.os_master = QCheckBox("Object snaps enabled")
+        self.os_master = QCheckBox(tr("Object snaps enabled"))
         self.os_master.setChecked(vp.snaps.enabled)
         self.os_master.toggled.connect(self._osnaps_changed)
         layout.addWidget(self.os_master)
@@ -508,7 +510,7 @@ class SettingsDialog(QDialog):
 
         self._ai_loading = True
         row_provider = QHBoxLayout()
-        row_provider.addWidget(QLabel("Provider"))
+        row_provider.addWidget(QLabel(tr("Provider")))
         self.cb_ai_provider = QComboBox()
         self.cb_ai_provider.addItem("Anthropic", "anthropic")
         self.cb_ai_provider.addItem("OpenAI", "openai")
@@ -522,7 +524,7 @@ class SettingsDialog(QDialog):
         self.ai_key_row = QWidget()
         row = QHBoxLayout(self.ai_key_row)
         row.setContentsMargins(0, 0, 0, 0)
-        row.addWidget(QLabel("API key"))
+        row.addWidget(QLabel(tr("API key")))
         self.ed_ai_key = QLineEdit()
         self.ed_ai_key.setEchoMode(QLineEdit.EchoMode.Password)
         self.ed_ai_key.editingFinished.connect(self._ai_changed)
@@ -532,20 +534,20 @@ class SettingsDialog(QDialog):
         self.ai_endpoint_row = QWidget()
         endpoint_row = QHBoxLayout(self.ai_endpoint_row)
         endpoint_row.setContentsMargins(0, 0, 0, 0)
-        endpoint_row.addWidget(QLabel("Server URL"))
+        endpoint_row.addWidget(QLabel(tr("Server URL")))
         self.ed_ai_endpoint = QLineEdit(str(self.cfg.get(
             "ai", "local_endpoint", default=DEFAULT_ENDPOINT)))
         self.ed_ai_endpoint.setPlaceholderText(DEFAULT_ENDPOINT)
         self.ed_ai_endpoint.setAccessibleName("LM Studio endpoint")
         self.ed_ai_endpoint.editingFinished.connect(self._ai_changed)
         endpoint_row.addWidget(self.ed_ai_endpoint, 1)
-        self.btn_ai_refresh = QPushButton("Refresh models")
+        self.btn_ai_refresh = QPushButton(tr("Refresh models"))
         self.btn_ai_refresh.clicked.connect(self._discover_ai_models)
         endpoint_row.addWidget(self.btn_ai_refresh)
         layout.addWidget(self.ai_endpoint_row)
 
         row2 = QHBoxLayout()
-        row2.addWidget(QLabel("Model"))
+        row2.addWidget(QLabel(tr("Model")))
         self.cb_ai_model = QComboBox()
         self.cb_ai_model.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         self.cb_ai_model.setMinimumContentsLength(16)
@@ -701,7 +703,7 @@ class SettingsDialog(QDialog):
                           "Viewport appearance. The grid sits on the "
                           "construction plane; one unit per minor square.")
         row = QHBoxLayout()
-        row.addWidget(QLabel("Grid extent (units)"))
+        row.addWidget(QLabel(tr("Grid extent (units)")))
         self.sp_extent = QSpinBox()
         self.sp_extent.setRange(10, 1000)
         self.sp_extent.setValue(
@@ -712,19 +714,19 @@ class SettingsDialog(QDialog):
         layout.addLayout(row)
 
         row2 = QHBoxLayout()
-        row2.addWidget(QLabel("Major line every"))
+        row2.addWidget(QLabel(tr("Major line every")))
         self.sp_major = QSpinBox()
         self.sp_major.setRange(2, 100)
         self.sp_major.setValue(
             int(self.cfg.get("display", "grid_major", default=10)))
         self.sp_major.valueChanged.connect(self._display_changed)
         row2.addWidget(self.sp_major)
-        row2.addWidget(QLabel("units"))
+        row2.addWidget(QLabel(tr("units")))
         row2.addStretch(1)
         layout.addLayout(row2)
 
         row3 = QHBoxLayout()
-        row3.addWidget(QLabel("New viewports open in"))
+        row3.addWidget(QLabel(tr("New viewports open in")))
         self.cb_mode = QComboBox()
         from .viewport import VIEW_FLIGHT_MS, Viewport
         for mode in Viewport.DISPLAY_MODES:
@@ -738,12 +740,12 @@ class SettingsDialog(QDialog):
         layout.addLayout(row3)
 
         row4 = QHBoxLayout()
-        row4.addWidget(QLabel("Turn to a named view over"))
+        row4.addWidget(QLabel(tr("Turn to a named view over")))
         self.sp_transition = QSpinBox()
         self.sp_transition.setRange(0, 1000)
         self.sp_transition.setSingleStep(10)
         self.sp_transition.setSuffix(" ms")
-        self.sp_transition.setSpecialValueText("no time (cut)")
+        self.sp_transition.setSpecialValueText(tr("no time (cut)"))
         self.sp_transition.setValue(int(self.cfg.get(
             "display", "view_transition_ms", default=VIEW_FLIGHT_MS)))
         self.sp_transition.valueChanged.connect(self._display_changed)
@@ -751,8 +753,26 @@ class SettingsDialog(QDialog):
         row4.addStretch(1)
         layout.addLayout(row4)
 
+        row_lang = QHBoxLayout()
+        row_lang.addWidget(QLabel(tr("Language")))
+        self.cb_language = QComboBox()
+        for code in available_languages():
+            self.cb_language.addItem(language_name(code), code)
+        saved = self.cfg.get("language", default="en")
+        index = self.cb_language.findData(saved)
+        self.cb_language.setCurrentIndex(index if index >= 0 else 0)
+        self.cb_language.currentIndexChanged.connect(self._language_changed)
+        row_lang.addWidget(self.cb_language)
+        self.lbl_language_note = QLabel(tr("after restart"))
+        self.lbl_language_note.setStyleSheet("color: #85868a;")
+        self.lbl_language_note.setVisible(
+            self.cb_language.currentData() != current_language())
+        row_lang.addWidget(self.lbl_language_note)
+        row_lang.addStretch(1)
+        layout.addLayout(row_lang)
+
         row5 = QHBoxLayout()
-        lbl_scale_title = QLabel("Interface scale")
+        lbl_scale_title = QLabel(tr("Interface scale"))
         row5.addWidget(lbl_scale_title)
         self.sl_scale = QSlider(Qt.Orientation.Horizontal)
         self.sl_scale.setRange(SCALE_MIN, SCALE_MAX)
@@ -765,7 +785,7 @@ class SettingsDialog(QDialog):
         self._running_scale = launcher.running_scale()
         self.sl_scale.valueChanged.connect(self._interface_changed)
         self.lbl_scale = QLabel(f"{self.sl_scale.value()}%")
-        self.lbl_scale_pending = QLabel("after restart")
+        self.lbl_scale_pending = QLabel(tr("after restart"))
         self.lbl_scale_pending.setStyleSheet(f"color: {theme.ACCENT};")
         row5.addWidget(self.sl_scale)
         row5.addWidget(self.lbl_scale)
@@ -782,7 +802,7 @@ class SettingsDialog(QDialog):
         layout.addLayout(row_preview)
 
         row6 = QHBoxLayout()
-        row6.addWidget(QLabel("Interface font"))
+        row6.addWidget(QLabel(tr("Interface font")))
         self.cb_font = QFontComboBox()
         self.cb_font.insertItem(0, "System default")
         family = self.cfg.get("display", "interface_font", default="") or ""
@@ -878,6 +898,11 @@ class SettingsDialog(QDialog):
         self.scale_preview.regrab()
         QTimer.singleShot(0, self._show_scale_state)
 
+    def _language_changed(self, *_):
+        code = self.cb_language.currentData()
+        self.cfg.set("language", code)
+        self.lbl_language_note.setVisible(code != current_language())
+
     def _display_changed(self, *_):
         self.cfg.set("display", "grid_extent", self.sp_extent.value())
         self.cfg.set("display", "grid_major", self.sp_major.value())
@@ -894,13 +919,13 @@ class SettingsDialog(QDialog):
                           "Serpentine3D can ask GitHub for a newer release "
                           "when it starts. Nothing but that one request "
                           "leaves the computer.")
-        self.cb_check_updates = QCheckBox("Check for updates on startup")
+        self.cb_check_updates = QCheckBox(tr("Check for updates on startup"))
         self.cb_check_updates.setChecked(
             self.cfg.get("check_updates", default=True) is not False)
         self.cb_check_updates.toggled.connect(
             lambda on: self.cfg.set("check_updates", on))
         layout.addWidget(self.cb_check_updates)
-        btn_now = QPushButton("Check Now")
+        btn_now = QPushButton(tr("Check Now"))
         btn_now.clicked.connect(lambda: self.window._check_updates_manual())
         row = QHBoxLayout()
         row.addWidget(btn_now)
@@ -930,14 +955,14 @@ class SettingsDialog(QDialog):
     def _table_buttons(self, table: QTableWidget, import_fn,
                        on_change) -> QHBoxLayout:
         row = QHBoxLayout()
-        btn_add = QPushButton("Add")
+        btn_add = QPushButton(tr("Add"))
         btn_add.clicked.connect(
             lambda: (table.insertRow(table.rowCount()),
                      table.setItem(table.rowCount() - 1, 0,
                                    QTableWidgetItem("")),
                      table.setItem(table.rowCount() - 1, 1,
                                    QTableWidgetItem(""))))
-        btn_del = QPushButton("Remove")
+        btn_del = QPushButton(tr("Remove"))
         btn_del.clicked.connect(
             lambda: (table.removeRow(table.currentRow())
                      if table.currentRow() >= 0 else None,
@@ -946,7 +971,7 @@ class SettingsDialog(QDialog):
         row.addWidget(btn_del)
         row.addStretch(1)
         if import_fn is not None:      # nothing to import a mouse chord from
-            btn_imp = QPushButton("Import…")
+            btn_imp = QPushButton(tr("Import…"))
             btn_imp.clicked.connect(import_fn)
             row.addWidget(btn_imp)
         return row

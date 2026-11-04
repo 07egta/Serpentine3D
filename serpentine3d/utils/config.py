@@ -97,6 +97,7 @@ DEFAULTS = {
     "default_units": "mm",
     "recent_files": [],                # most-recent-first document paths
     "show_welcome": True,              # start screen on launch
+    "language": "en",                  # interface language code; see i18n.py
     "check_updates": True,             # check GitHub for a newer release on launch
     "aliases": {},                     # alias -> command name
     "shortcuts": DEFAULT_SHORTCUTS,    # key sequence -> command name

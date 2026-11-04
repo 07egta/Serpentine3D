@@ -2,7 +2,7 @@
 # Build (from this directory, in a venv with serpentine3d + pyinstaller):
 #   pyinstaller --clean -y serp3d.spec
 # Produces dist/Serpentine3D.app.  See build-dmg.sh for the full flow.
-from PyInstaller.utils.hooks import collect_dynamic_libs
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 
 # OCP.so links the OCCT runtime via @loader_path/.dylibs/libTK*.dylib, and
 # that runtime in turn pulls in the VTK dylibs from the vtkmodules wheel.
@@ -15,7 +15,8 @@ a = Analysis(
     ["serp3d_entry.py"],
     pathex=[],
     binaries=binaries,
-    datas=[],
+    # Interface-language catalogues are plain data files PyInstaller cannot see.
+    datas=collect_data_files("serpentine3d", includes=["locales/*.json"]),
     hiddenimports=[],
     excludes=[
         "tkinter",

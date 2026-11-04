@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
 
 from . import commands as cmd_pkg
 from . import fileio
+from .i18n import init_from_config, tr
 from .commands.base import (
     CommandContext, CommandProcessor, FileReq, OptionReq, PointReq, SelectReq,
     TextReq, resolve,
@@ -80,6 +81,7 @@ class MainWindow(QMainWindow):
         self.updateAvailable.connect(self._on_update_available)
         from .utils.config import Config
         self.cfg = Config()
+        init_from_config(self.cfg)      # before any menu or panel is built
         self.scene = Scene()
         from .utils.units import UNITS
         default_units = self.cfg.get("default_units", default="mm")
@@ -986,10 +988,10 @@ class MainWindow(QMainWindow):
         mb = self.menuBar()
         self._shortcut_actions = {}
 
-        m_file = mb.addMenu("&File")
+        m_file = mb.addMenu(tr("&File"))
         self._action(m_file, "New", "Ctrl+N", lambda: self._file_new())
         self._action(m_file, "Open...", "Ctrl+O", self._file_open)
-        self._recent_menu = m_file.addMenu("Open Recent")
+        self._recent_menu = m_file.addMenu(tr("Open Recent"))
         self._rebuild_recent_menu()
         m_file.addSeparator()
         self._action(m_file, "Save", "Ctrl+S", self._file_save)
@@ -1001,7 +1003,7 @@ class MainWindow(QMainWindow):
         m_file.addSeparator()
         self._action(m_file, "Quit", "Ctrl+Q", self.close)
 
-        m_edit = mb.addMenu("&Edit")
+        m_edit = mb.addMenu(tr("&Edit"))
         self._action(m_edit, "Undo", "Ctrl+Z", lambda: self.run_command("undo"))
         self._action(m_edit, "Redo", "Ctrl+Y", lambda: self.run_command("redo"))
         m_edit.addSeparator()
@@ -1030,7 +1032,7 @@ class MainWindow(QMainWindow):
         self._action(m_edit, "Control Points Off", "F11",
                      lambda: self.run_command("pointsoff"))
 
-        m_view = mb.addMenu("&View")
+        m_view = mb.addMenu(tr("&View"))
         self._action(m_view, "Top", "F1", lambda: self.run_command("top"))
         self._action(m_view, "Front", "F2", lambda: self.run_command("front"))
         self._action(m_view, "Right", "F3", lambda: self.run_command("right"))
@@ -1061,7 +1063,7 @@ class MainWindow(QMainWindow):
         self._action(m_view, "AI Assistant", "Ctrl+Shift+A",
                      self.show_ai_panel)
         tools_toolbar_action = self._tools_toolbar.toggleViewAction()
-        tools_toolbar_action.setText("Tools Toolbar")
+        tools_toolbar_action.setText(tr("Tools Toolbar"))
         m_view.addAction(tools_toolbar_action)
         m_view.addSeparator()
         # Four Viewports was two levels down and went unfound (GitHub #5
@@ -1073,7 +1075,7 @@ class MainWindow(QMainWindow):
                      lambda: self.run_command("4view"))
         self._action(m_view, "Single Viewport", None,
                      lambda: self.run_command("1view"))
-        m_ports = m_view.addMenu("More Viewports")
+        m_ports = m_view.addMenu(tr("More Viewports"))
         self._action(m_ports, "New Viewport...", None,
                      lambda: self.run_command("newviewport"))
         self._action(m_ports, "Floating Viewport", None,
@@ -1082,7 +1084,7 @@ class MainWindow(QMainWindow):
         self._action(m_view, "Toggle Grid", "F7",
                      lambda: self.run_command("grid"))
 
-        m_draft = mb.addMenu("&Drafting")
+        m_draft = mb.addMenu(tr("&Drafting"))
         self._action(m_draft, "New Layout...", None,
                      lambda: self.run_command("layout"))
         self._action(m_draft, "Place Detail View...", None,
@@ -1105,19 +1107,19 @@ class MainWindow(QMainWindow):
         self._action(m_draft, "Toggle Grid Snap", None,
                      lambda: self.run_command("gridsnap"), binding="gridsnap")
 
-        m_tools = mb.addMenu("&Tools")
+        m_tools = mb.addMenu(tr("&Tools"))
         self._action(m_tools, "Command Palette...", "Ctrl+Shift+P",
                      self._show_palette)
         self._action(m_tools, "Script Editor", "Ctrl+`",
                      self._toggle_console)
         self._action(m_tools, "Settings...", "Ctrl+,", self._show_settings)
 
-        self._plugins_menu = mb.addMenu("&Plugins")
+        self._plugins_menu = mb.addMenu(tr("&Plugins"))
         self._action(self._plugins_menu, "Plugin folder...", None,
                      self._open_plugin_dir)
         self._plugins_menu.addSeparator()
 
-        m_help = mb.addMenu("&Help")
+        m_help = mb.addMenu(tr("&Help"))
         self._action(m_help, "Commands", None, self._show_commands)
         self._action(m_help, "Command Reference", None, self.show_help_browser)
         self._action(m_help, "Check for Updates…", None,
@@ -1141,7 +1143,7 @@ class MainWindow(QMainWindow):
 
     def _action(self, menu, label, shortcut, fn, *, binding=None):
         from .utils.config import DEFAULT_SHORTCUTS
-        act = QAction(label, self)
+        act = QAction(tr(label), self)
         if binding is None and shortcut:
             binding = DEFAULT_SHORTCUTS[shortcut]
         if binding is not None:
